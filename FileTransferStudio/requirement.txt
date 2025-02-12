@@ -1,9 +1,16 @@
-web: gunicorn app:app
-web: gunicorn main:server
-Flask==2.x.x
-gunicorn==20.x.x
-requests==2.x.x
-pandas==1.x.x
-numpy==1.x.x
-sqlalchemy==1.x.x
-psycopg2-binary==2.x.x
+# List of required packages for FileTransferStudio
+
+# Flask for web framework
+Flask==2.0.2
+
+# Flask extensions
+Flask-SQLAlchemy==2.5.1
+Flask-Migrate==3.1.0
+Flask-Login==0.5.0
+
+# Database
+psycopg2-binary==2.9.1
+
+# Other dependencies
+requests==2.26.0
+gunicorn==20.1.0
