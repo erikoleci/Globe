@@ -1,0 +1,12 @@
+flask
+requests
+paramiko
+pandas
+numpy
+scipy
+matplotlib
+sqlalchemy
+psycopg2
+pymysql
+cryptography
+pyyaml
