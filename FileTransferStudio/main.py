@@ -1,9 +1,12 @@
 import logging
 from app import app
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+    port = int(os.environ.get("PORT", 5000))
 
 if __name__ == "__main__":
     try:
