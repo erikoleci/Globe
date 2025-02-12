@@ -6,8 +6,6 @@ import os
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-    port = int(os.environ.get("PORT", 5000))
-
 if __name__ == "__main__":
     try:
         logger.info("Starting Flask server on port 5000...")
