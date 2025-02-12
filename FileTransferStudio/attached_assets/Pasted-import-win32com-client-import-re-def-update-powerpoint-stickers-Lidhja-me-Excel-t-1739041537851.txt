@@ -1,0 +1,87 @@
+import win32com.client
+import re
+
+def update_powerpoint_stickers():
+    # Lidhja me Excel
+    try:
+        excel = win32com.client.Dispatch("Excel.Application")
+        wb = excel.ActiveWorkbook
+        ws = wb.Sheets(1)  # Fleta e parë në Excel
+    except Exception as e:
+        print(f"Gabim gjatë lidhjes me Excel: {e}")
+        return
+
+    # Lidhja me PowerPoint
+    try:
+        ppt = win32com.client.Dispatch("PowerPoint.Application")
+        ppt.Visible = True
+        ppt_pres = ppt.ActivePresentation
+    except Exception as e:
+        print(f"Gabim gjatë lidhjes me PowerPoint: {e}")
+        return
+
+    row_index = 2  # Fillon nga rreshti i dytë në Excel
+    slide_index = 1  # Fillon me sliden e parë në PowerPoint
+    sticker_index = 1  # Fillon me stikerin e parë brenda slajdit
+
+    # Loop për çdo rresht në Excel dhe vendos të dhënat në sticker
+    while ws.Cells(row_index, 3).Value != "":  # Kontrollo për boshatisje në kolonën C
+        pershkrimi_produkti = ws.Cells(row_index, 3).Value
+        cmim_dyqani = ws.Cells(row_index, 4).Value
+        cmim_oferte = ws.Cells(row_index, 5).Value
+
+        # Fshij " Leke" nga cmimet dhe formatizimi
+        cmim_dyqani = re.sub(r" Leke", "", cmim_dyqani)
+        cmim_oferte = re.sub(r" Leke", "", cmim_oferte)
+        if cmim_dyqani.isdigit():
+            cmim_dyqani = f"{int(cmim_dyqani):,}"
+        else:
+            cmim_dyqani = ""
+
+        if cmim_oferte.isdigit():
+            cmim_oferte = f"{int(cmim_oferte):,}"
+        else:
+            cmim_oferte = ""
+
+        # Sigurohuni që ka sa më shumë slide
+        if slide_index > ppt_pres.Slides.Count:
+            ppt_pres.Slides.Add(ppt_pres.Slides.Count + 1, 1)  # Shto një slide të ri
+
+        ppt_slide = ppt_pres.Slides(slide_index)
+
+        # Gjej forma përkatëse dhe shto tekst
+        try:
+            # Pershkrimi i produktit
+            shape = ppt_slide.Shapes("pershkrimi i produktit" + str(sticker_index))
+            shape.TextFrame.TextRange.Text = pershkrimi_produkti
+            shape.TextFrame.TextRange.Font.Size = 11
+
+            # Cmimi i dyqanit
+            shape = ppt_slide.Shapes("cmim dyqani" + str(sticker_index))
+            shape.TextFrame.TextRange.Text = cmim_dyqani
+            shape.TextFrame.TextRange.Font.Size = 12
+            shape.TextFrame.TextRange.Font.Color.RGB = (0, 0, 0)
+
+            # Cmimi i ofertes
+            shape = ppt_slide.Shapes("cmim oferte" + str(sticker_index))
+            shape.TextFrame.TextRange.Text = cmim_oferte
+            shape.TextFrame.TextRange.Font.Size = 35
+            shape.TextFrame.TextRange.Font.Color.RGB = (0, 0, 0)
+
+        except Exception as e:
+            print(f"Gabim me zëvendësimin e stikerëve: {e}")
+
+        # Rrit indeksin e stikerit
+        sticker_index += 1
+
+        # Nëse kemi mbushur 9 stikera, kalojmë në slide-in tjetër
+        if sticker_index > 9:
+            sticker_index = 1
+            slide_index += 1
+
+        row_index += 1  # Kalo në rreshtin tjetër
+
+    print("Të dhënat u transferuan me sukses në PowerPoint!")
+
+# Thirr funksionin
+update_powerpoint_stickers()

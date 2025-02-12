@@ -1,0 +1,127 @@
+Sub UpdatePowerPointStickers()
+    Dim pptApp As Object
+    Dim pptPresentation As Object
+    Dim pptSlide As Object
+    Dim pptShape As Object
+    Dim ws As Worksheet
+    Dim cmimOfertë As String
+    Dim cmimDyqani As String
+    Dim uljaNePerqindje As String
+    Dim slideIndex As Integer
+    Dim rowIndex As Integer
+    Dim stickerIndex As Integer ' Index për stikerat brenda një slide (1, 2, 3)
+
+    ' Referenca për workbook-un aktiv (Excel)
+    Set ws = ActiveWorkbook.Sheets(1) ' Përdorim fletën e parë në Excel (mund të ndryshohet në varësi të fletës që përdorni)
+
+    ' Kontrollo nëse PowerPoint është i hapur
+    On Error Resume Next
+    Set pptApp = GetObject(, "PowerPoint.Application")
+    On Error GoTo 0
+    If pptApp Is Nothing Then
+        MsgBox "PowerPoint nuk është i hapur. Hap prezantimin dhe provo përsëri!", vbExclamation
+        Exit Sub
+    End If
+
+    ' Merr prezantimin aktiv (nuk kërkohet emri i prezantimit)
+    On Error Resume Next
+    Set pptPresentation = pptApp.ActivePresentation
+    On Error GoTo 0
+
+    If pptPresentation Is Nothing Then
+        MsgBox "Nuk u gjet një prezantim aktiv. Sigurohuni që të keni një prezantim të hapur!", vbExclamation
+        Exit Sub
+    End If
+
+    ' Kontrolloni prezantimin i lidhur
+    MsgBox "PowerPoint është lidhur me prezantimin: " & pptPresentation.Name
+
+    ' Fillon për çdo rresht në Excel dhe zëvendëson të dhënat në slide
+    rowIndex = 2 ' Fillon nga rreshti i dytë në Excel për të marrë të dhënat (mund të ndryshoni këtë nëse është e nevojshme)
+    slideIndex = 1 ' Fillon me sliden e parë në PowerPoint
+    stickerIndex = 1 ' Fillon me stikerin e parë brenda slajdit
+
+    ' Loop për çdo rresht në Excel dhe vendos të dhënat në sticker
+    Do While ws.Cells(rowIndex, 1).Value <> "" ' Ndalohet kur arrin në një rresht bosh
+
+        ' Kontrollo nëse slideIndex është brenda kufijve të ekzistueshëm
+        If slideIndex > pptPresentation.Slides.Count Then
+            ' Nëse slides janë mbaruar, krijo një slide të ri
+            pptPresentation.Slides.Add pptPresentation.Slides.Count + 1, 1 ' Shto një slide të ri në fund
+        End If
+
+        ' Merr sliden përkatëse
+        Set pptSlide = pptPresentation.Slides(slideIndex)
+
+        ' Merr çmimin e ofertës dhe hiq " Leke" nga fundi i tekstit
+        cmimOfertë = ws.Cells(rowIndex, 8).Value
+        cmimOfertë = Replace(cmimOfertë, " Leke", "")
+        cmimOfertë = Format(CDbl(cmimOfertë), "#,##0") ' Formatojmë çmimin për të pasur presje (p.sh., 30.900)
+
+        ' Merr çmimin e dyqanit dhe ruaj si numër
+        cmimDyqani = ws.Cells(rowIndex, 7).Value
+        cmimDyqani = Replace(cmimDyqani, " Leke", "")
+        cmimDyqani = Format(CDbl(cmimDyqani), "#,##0") ' Formatojmë çmimin për të pasur presje (p.sh., 300.900)
+
+        ' Merr uljen në përqindje (duke ruajtur formatin ashtu siç është)
+        uljaNePerqindje = ws.Cells(rowIndex, 9).Text ' Përdorim .Text për të marrë vlerën si është e shkruar në Excel
+        If InStr(uljaNePerqindje, "%") = 0 Then ' Sigurohemi që përqindja të jetë me simbolet e duhura
+            uljaNePerqindje = uljaNePerqindje & "%" ' Nëse nuk ka përqindje, shtojmë "%", nëse është e nevojshme
+        End If
+
+        ' Gjej dhe mbush Text Box-et për çdo stiker brenda slajdit
+        On Error Resume Next
+
+        ' Përshkrimi i produktit
+        Set pptShape = pptSlide.Shapes("pershkrimi i produktit" & stickerIndex) ' Emri i TextBox për stikerin aktual
+        If Not pptShape Is Nothing Then
+            pptShape.TextFrame.TextRange.Text = ws.Cells(rowIndex, 6).Value ' Shtoni përmbajtjen nga Excel
+            pptShape.TextFrame.TextRange.Font.Size = 28 ' Madhësia e fontit për përshkrimin
+        End If
+
+        ' Çmimi i ofertës
+        Set pptShape = pptSlide.Shapes("cmim oferte" & stickerIndex) ' Emri i TextBox për stikerin aktual
+        If Not pptShape Is Nothing Then
+            pptShape.TextFrame.TextRange.Text = cmimOfertë ' Shtoni çmimin e ofertës pa "Leke"
+            pptShape.TextFrame.TextRange.Font.Size = 72 ' Madhësia e fontit për çmimin e ofertës
+            pptShape.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0) ' Ngjyra e fontit (e zezë)
+        End If
+
+        ' Çmimi i dyqanit
+        Set pptShape = pptSlide.Shapes("cmim dyqani" & stickerIndex) ' Emri i TextBox për stikerin aktual
+        If Not pptShape Is Nothing Then
+            pptShape.TextFrame.TextRange.Text = cmimDyqani ' Shtoni çmimin e dyqanit pa "Leke"
+            pptShape.TextFrame.TextRange.Font.Size = 45 ' Madhësia e fontit për çmimin e dyqanit
+            pptShape.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0) ' Ngjyra e fontit (e zezë)
+        End If
+
+        ' Ulja në përqindje
+        Set pptShape = pptSlide.Shapes("ulja ne %" & stickerIndex) ' Emri i TextBox për stikerin aktual
+        If Not pptShape Is Nothing Then
+            pptShape.TextFrame.TextRange.Text = uljaNePerqindje ' Shtoni uljen në përqindje
+            pptShape.TextFrame.TextRange.Font.Size = 24 ' Madhësia e fontit për uljen në përqindje
+            pptShape.TextFrame.TextRange.Font.Color.RGB = RGB(255, 255, 255) ' Ngjyra e fontit (e bardhë)
+        End If
+
+        On Error GoTo 0
+
+        ' Rrit indeksin e stikerit
+        stickerIndex = stickerIndex + 1
+
+        ' Nëse kemi mbushur 3 stikera, kalojmë në slide-in tjetër
+        If stickerIndex > 3 Then
+            stickerIndex = 1 ' Rivendos indeksin e stikerit
+            slideIndex = slideIndex + 1 ' Kalojmë në slide-in tjetër
+        End If
+
+        rowIndex = rowIndex + 1 ' Rrit index-in për rreshtin tjetër
+    Loop
+
+    MsgBox "Të dhënat u transferuan me sukses në PowerPoint!", vbInformation
+
+    ' Pastrim
+    Set pptShape = Nothing
+    Set pptSlide = Nothing
+    Set pptPresentation = Nothing
+    Set pptApp = Nothing
+End Sub

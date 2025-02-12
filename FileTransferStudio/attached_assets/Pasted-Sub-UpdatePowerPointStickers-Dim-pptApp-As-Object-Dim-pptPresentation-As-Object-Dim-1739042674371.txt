@@ -1,0 +1,118 @@
+Sub UpdatePowerPointStickers()
+    Dim pptApp As Object
+    Dim pptPresentation As Object
+    Dim pptSlide As Object
+    Dim pptShape As Object
+    Dim ws As Worksheet
+    Dim cmimOfertë As Variant
+    Dim cmimDyqani As Variant
+    Dim pershkrimiProduktit As String
+    Dim slideIndex As Integer
+    Dim rowIndex As Integer
+    Dim stickerIndex As Integer ' Index për stikerat brenda një slide (1 deri 9)
+
+    ' Referenca për workbook-un aktiv (Excel)
+    Set ws = ActiveWorkbook.Sheets(1) ' Përdo fletën e parë në Excel (mund të ndryshohet)
+
+    ' Kontrollo nëse PowerPoint është i hapur
+    On Error Resume Next
+    Set pptApp = GetObject(, "PowerPoint.Application")
+    On Error GoTo 0
+    If pptApp Is Nothing Then
+        MsgBox "PowerPoint nuk është i hapur. Hap prezantimin dhe provo përsëri!", vbExclamation
+        Exit Sub
+    End If
+
+    ' Merr prezantimin aktiv
+    On Error Resume Next
+    Set pptPresentation = pptApp.ActivePresentation
+    On Error GoTo 0
+
+    If pptPresentation Is Nothing Then
+        MsgBox "Nuk u gjet një prezantim aktiv. Sigurohuni që të keni një prezantim të hapur!", vbExclamation
+        Exit Sub
+    End If
+
+    ' Fillon për çdo rresht në Excel dhe zëvendëson të dhënat në slide
+    rowIndex = 2 ' Fillon nga rreshti i dytë në Excel
+    slideIndex = 1 ' Fillon me sliden e parë në PowerPoint
+    stickerIndex = 1 ' Fillon me stikerin e parë brenda slajdit
+
+    ' Loop për çdo rresht në Excel dhe vendos të dhënat në sticker
+    Do While ws.Cells(rowIndex, 3).Value <> "" ' Kontrollo për boshatisje në kolonën C
+
+        ' Kontrollo nëse slideIndex është brenda kufijve të prezantimit
+        If slideIndex > pptPresentation.Slides.Count Then
+            pptPresentation.Slides.Add pptPresentation.Slides.Count + 1, 1 ' Shto një slide të ri
+        End If
+
+        ' Merr sliden përkatëse
+        Set pptSlide = pptPresentation.Slides(slideIndex)
+
+        ' Merr të dhënat nga Excel
+        pershkrimiProduktit = ws.Cells(rowIndex, 3).Value
+
+        cmimDyqani = ws.Cells(rowIndex, 4).Value
+        cmimDyqani = Replace(cmimDyqani, " Leke", "")
+        If IsNumeric(cmimDyqani) Then
+            cmimDyqani = FormatNumber(CDbl(cmimDyqani), 0, , , vbTrue)
+        Else
+            cmimDyqani = ""
+        End If
+
+        cmimOfertë = ws.Cells(rowIndex, 5).Value
+        cmimOfertë = Replace(cmimOfertë, " Leke", "")
+        If IsNumeric(cmimOfertë) Then
+            cmimOfertë = FormatNumber(CDbl(cmimOfertë), 0, , , vbTrue)
+        Else
+            cmimOfertë = ""
+        End If
+
+        On Error Resume Next
+
+        ' Pershkrimi i produktit
+        Set pptShape = pptSlide.Shapes("pershkrimi i produktit" & stickerIndex)
+        If Not pptShape Is Nothing Then
+            pptShape.TextFrame.TextRange.Text = pershkrimiProduktit
+            pptShape.TextFrame.TextRange.Font.Size = 11
+        End If
+
+        ' Cmimi i dyqanit
+        Set pptShape = pptSlide.Shapes("cmim dyqani" & stickerIndex)
+        If Not pptShape Is Nothing Then
+            pptShape.TextFrame.TextRange.Text = cmimDyqani
+            pptShape.TextFrame.TextRange.Font.Size = 12
+            pptShape.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
+        End If
+
+        ' Cmimi i ofertes
+        Set pptShape = pptSlide.Shapes("cmim oferte" & stickerIndex)
+        If Not pptShape Is Nothing Then
+            pptShape.TextFrame.TextRange.Text = cmimOfertë
+            pptShape.TextFrame.TextRange.Font.Size = 35
+            pptShape.TextFrame.TextRange.Font.Color.RGB = RGB(0, 0, 0)
+        End If
+
+        On Error GoTo 0
+
+        ' Rrit indeksin e stikerit
+        stickerIndex = stickerIndex + 1
+
+        ' Nëse kemi mbushur 9 stikera, kalojmë në slide-in tjetër
+        If stickerIndex > 9 Then
+            stickerIndex = 1
+            slideIndex = slideIndex + 1
+        End If
+
+        rowIndex = rowIndex + 1 ' Kalo në rreshtin tjetër
+    Loop
+
+    MsgBox "Të dhënat u transferuan me sukses në PowerPoint!", vbInformation
+
+    ' Pastrim
+    Set pptShape = Nothing
+    Set pptSlide = Nothing
+    Set pptPresentation = Nothing
+    Set pptApp = Nothing
+End Sub
+
