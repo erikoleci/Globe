@@ -8,7 +8,7 @@
     ],
     "build": {
       "env": {
-        "BUILD_SCRIPT": "./build.sh"
+        "PYTHON_VERSION": "3.10"
       }
     },
     "routes": [
